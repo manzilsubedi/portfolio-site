@@ -1,5 +1,7 @@
 # Portfolio Template — React + .NET
 
+**Live demo:** [msubedi.com.np](https://msubedi.com.np) (my own portfolio, built with this template)
+
 A personal portfolio website you can make your own. The **React (Vite)** frontend
 renders the site; the **ASP.NET Core (.NET 10)** backend stores all content in
 **PostgreSQL** and includes a password-protected **admin dashboard** for editing
