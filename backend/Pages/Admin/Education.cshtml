@@ -1,0 +1,114 @@
+@page "/admin/education"
+@{
+    ViewData["Title"] = "Education";
+}
+<h1>Education</h1>
+
+<table class="admin-table" id="table">
+    <thead>
+        <tr><th>School</th><th>Degree</th><th>Period</th><th>Sort</th><th></th></tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+</table>
+
+<form id="form" class="admin-form">
+    <input type="hidden" id="editId" />
+    <label>School
+        <input type="text" id="school" required />
+    </label>
+    <label>Degree
+        <input type="text" id="degree" required />
+    </label>
+    <label>Period
+        <input type="text" id="period" required />
+    </label>
+    <label>Details
+        <textarea id="details"></textarea>
+    </label>
+    <label>Sort order
+        <input type="text" id="sortOrder" required value="1" />
+    </label>
+    <div class="admin-actions">
+        <button type="submit" class="admin-btn">Save</button>
+        <button type="button" class="admin-btn secondary" onclick="resetForm()">Cancel</button>
+        <span id="status" class="admin-status"></span>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    const status = document.getElementById("status");
+
+    function resetForm() {
+        document.getElementById("form").reset();
+        document.getElementById("editId").value = "";
+        document.getElementById("sortOrder").value = "1";
+    }
+
+    function editRow(item) {
+        document.getElementById("editId").value = item.id;
+        document.getElementById("school").value = item.school;
+        document.getElementById("degree").value = item.degree;
+        document.getElementById("period").value = item.period;
+        document.getElementById("details").value = item.details;
+        document.getElementById("sortOrder").value = item.sortOrder;
+        window.scrollTo({ top: document.getElementById("form").offsetTop, behavior: "smooth" });
+    }
+
+    async function deleteRow(id) {
+        if (!confirm("Delete this education entry?")) return;
+        await authFetch(`/api/admin/education/${id}`, { method: "DELETE" });
+        await load();
+    }
+
+    async function load() {
+        const res = await authFetch("/api/admin/education");
+        const items = await res.json();
+        const body = document.getElementById("table-body");
+        body.innerHTML = "";
+        for (const item of items) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${item.school}</td>
+                <td>${item.degree}</td>
+                <td>${item.period}</td>
+                <td>${item.sortOrder}</td>
+                <td>
+                    <button onclick='editRow(${JSON.stringify(item)})'>Edit</button>
+                    <button onclick="deleteRow(${item.id})">Delete</button>
+                </td>`;
+            body.appendChild(tr);
+        }
+    }
+
+    document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("editId").value;
+        const body = {
+            school: document.getElementById("school").value,
+            degree: document.getElementById("degree").value,
+            period: document.getElementById("period").value,
+            details: document.getElementById("details").value,
+            sortOrder: parseInt(document.getElementById("sortOrder").value, 10),
+        };
+
+        const url = id ? `/api/admin/education/${id}` : "/api/admin/education";
+        const method = id ? "PUT" : "POST";
+        const res = await authFetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+
+        if (res.ok) {
+            showStatus(status, "Saved");
+            resetForm();
+            await load();
+        } else {
+            showStatus(status, "Failed to save", true);
+        }
+    });
+
+    load();
+</script>
+}

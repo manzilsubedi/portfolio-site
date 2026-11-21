@@ -1,0 +1,26 @@
+# Secrets / local config — never commit these
+.env
+.env.local
+.env.*.local
+*.local
+appsettings.Development.json
+appsettings.Production.json
+
+# .NET
+bin/
+obj/
+publish/
+.vs/
+*.user
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+
+# Editors / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+.claude/

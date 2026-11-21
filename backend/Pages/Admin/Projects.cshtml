@@ -1,0 +1,113 @@
+@page "/admin/projects"
+@{
+    ViewData["Title"] = "Projects";
+}
+<h1>Freelance projects</h1>
+
+<table class="admin-table" id="table">
+    <thead>
+        <tr><th>Title</th><th>Tags</th><th>Sort</th><th></th></tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+</table>
+
+<form id="form" class="admin-form">
+    <input type="hidden" id="editId" />
+    <label>Title
+        <input type="text" id="title" required />
+    </label>
+    <label>Description
+        <textarea id="description" required></textarea>
+    </label>
+    <label>Tags (one per line)
+        <textarea id="tags"></textarea>
+    </label>
+    <label>Link
+        <input type="text" id="link" required />
+    </label>
+    <label>Sort order
+        <input type="text" id="sortOrder" required value="1" />
+    </label>
+    <div class="admin-actions">
+        <button type="submit" class="admin-btn">Save</button>
+        <button type="button" class="admin-btn secondary" onclick="resetForm()">Cancel</button>
+        <span id="status" class="admin-status"></span>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    const status = document.getElementById("status");
+
+    function resetForm() {
+        document.getElementById("form").reset();
+        document.getElementById("editId").value = "";
+        document.getElementById("sortOrder").value = "1";
+    }
+
+    function editRow(item) {
+        document.getElementById("editId").value = item.id;
+        document.getElementById("title").value = item.title;
+        document.getElementById("description").value = item.description;
+        document.getElementById("tags").value = arrayToLines(item.tags);
+        document.getElementById("link").value = item.link;
+        document.getElementById("sortOrder").value = item.sortOrder;
+        window.scrollTo({ top: document.getElementById("form").offsetTop, behavior: "smooth" });
+    }
+
+    async function deleteRow(id) {
+        if (!confirm("Delete this project?")) return;
+        await authFetch(`/api/admin/projects/${id}`, { method: "DELETE" });
+        await load();
+    }
+
+    async function load() {
+        const res = await authFetch("/api/admin/projects");
+        const items = await res.json();
+        const body = document.getElementById("table-body");
+        body.innerHTML = "";
+        for (const item of items) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${item.title}</td>
+                <td>${item.tags.join(", ")}</td>
+                <td>${item.sortOrder}</td>
+                <td>
+                    <button onclick='editRow(${JSON.stringify(item)})'>Edit</button>
+                    <button onclick="deleteRow(${item.id})">Delete</button>
+                </td>`;
+            body.appendChild(tr);
+        }
+    }
+
+    document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("editId").value;
+        const body = {
+            title: document.getElementById("title").value,
+            description: document.getElementById("description").value,
+            tags: linesToArray(document.getElementById("tags").value),
+            link: document.getElementById("link").value,
+            sortOrder: parseInt(document.getElementById("sortOrder").value, 10),
+        };
+
+        const url = id ? `/api/admin/projects/${id}` : "/api/admin/projects";
+        const method = id ? "PUT" : "POST";
+        const res = await authFetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+
+        if (res.ok) {
+            showStatus(status, "Saved");
+            resetForm();
+            await load();
+        } else {
+            showStatus(status, "Failed to save", true);
+        }
+    });
+
+    load();
+</script>
+}

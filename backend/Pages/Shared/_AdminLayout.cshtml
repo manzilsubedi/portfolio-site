@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] — Admin</title>
+    <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+    <div class="admin-header">
+        <a href="/admin">Portfolio admin</a>
+        <button onclick="logout()">Log out</button>
+    </div>
+    <nav class="admin-nav">
+        <a href="/admin/hero">Hero</a>
+        <a href="/admin/contact">Contact</a>
+        <a href="/admin/about">About</a>
+        <a href="/admin/skill-groups">Skills</a>
+        <a href="/admin/education">Education</a>
+        <a href="/admin/certifications">Certifications</a>
+        <a href="/admin/experience">Experience</a>
+        <a href="/admin/work">Work intro</a>
+        <a href="/admin/projects">Projects</a>
+    </nav>
+    <div class="admin-content">
+        @RenderBody()
+    </div>
+
+    <script src="/admin/admin.js"></script>
+    <script>requireAuth();</script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

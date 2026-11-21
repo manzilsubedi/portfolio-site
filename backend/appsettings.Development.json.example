@@ -1,0 +1,18 @@
+{
+  "ConnectionStrings": {
+    "Default": "Host=localhost;Port=5432;Database=portfolio;Username=postgres;Password=CHANGE_ME"
+  },
+  "Cors": {
+    "AllowedOrigins": [ "http://localhost:5173" ]
+  },
+  "AdminAuth": {
+    "Username": "admin@example.com",
+    "PasswordHash": "PASTE_OUTPUT_OF: dotnet run -- hash-password <your-password>"
+  },
+  "Jwt": {
+    "Secret": "PASTE_A_RANDOM_STRING_OF_AT_LEAST_32_CHARS",
+    "Issuer": "PortfolioApi",
+    "Audience": "PortfolioApiAdmin",
+    "ExpiryMinutes": 120
+  }
+}

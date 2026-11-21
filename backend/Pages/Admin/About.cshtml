@@ -1,0 +1,40 @@
+@page "/admin/about"
+@{
+    ViewData["Title"] = "About";
+}
+<h1>About paragraph</h1>
+<p>Skill groups, education, and certifications each have their own page in the nav above.</p>
+<form id="form" class="admin-form">
+    <label>Paragraph
+        <textarea id="paragraph" required style="min-height: 8rem;"></textarea>
+    </label>
+    <div class="admin-actions">
+        <button type="submit" class="admin-btn">Save</button>
+        <span id="status" class="admin-status"></span>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    const status = document.getElementById("status");
+
+    async function load() {
+        const res = await authFetch("/api/admin/about-paragraph");
+        const data = await res.json();
+        document.getElementById("paragraph").value = data.paragraph;
+    }
+
+    document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const body = { paragraph: document.getElementById("paragraph").value };
+        const res = await authFetch("/api/admin/about-paragraph", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+        showStatus(status, res.ok ? "Saved" : "Failed to save", !res.ok);
+    });
+
+    load();
+</script>
+}

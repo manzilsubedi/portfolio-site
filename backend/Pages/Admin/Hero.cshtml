@@ -1,0 +1,56 @@
+@page "/admin/hero"
+@{
+    ViewData["Title"] = "Hero";
+}
+<h1>Hero section</h1>
+<form id="form" class="admin-form">
+    <label>Eyebrow
+        <input type="text" id="eyebrow" required />
+    </label>
+    <label>Title
+        <input type="text" id="title" required />
+    </label>
+    <label>Subtitle
+        <textarea id="subtitle" required></textarea>
+    </label>
+    <label>Tech badges (one per line)
+        <textarea id="techBadges"></textarea>
+    </label>
+    <div class="admin-actions">
+        <button type="submit" class="admin-btn">Save</button>
+        <span id="status" class="admin-status"></span>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    const status = document.getElementById("status");
+
+    async function load() {
+        const res = await authFetch("/api/admin/hero");
+        const data = await res.json();
+        document.getElementById("eyebrow").value = data.eyebrow;
+        document.getElementById("title").value = data.title;
+        document.getElementById("subtitle").value = data.subtitle;
+        document.getElementById("techBadges").value = arrayToLines(data.techBadges);
+    }
+
+    document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const body = {
+            eyebrow: document.getElementById("eyebrow").value,
+            title: document.getElementById("title").value,
+            subtitle: document.getElementById("subtitle").value,
+            techBadges: linesToArray(document.getElementById("techBadges").value),
+        };
+        const res = await authFetch("/api/admin/hero", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+        showStatus(status, res.ok ? "Saved" : "Failed to save", !res.ok);
+    });
+
+    load();
+</script>
+}

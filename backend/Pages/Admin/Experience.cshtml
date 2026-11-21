@@ -1,0 +1,132 @@
+@page "/admin/experience"
+@{
+    ViewData["Title"] = "Experience";
+}
+<h1>Experience</h1>
+
+<table class="admin-table" id="table">
+    <thead>
+        <tr><th>Role</th><th>Company</th><th>Period</th><th>Current</th><th>Sort</th><th></th></tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+</table>
+
+<form id="form" class="admin-form">
+    <input type="hidden" id="editId" />
+    <label>Role
+        <input type="text" id="role" required />
+    </label>
+    <label>Company
+        <input type="text" id="company" required />
+    </label>
+    <label>Period
+        <input type="text" id="period" required placeholder="e.g. Jul 2025 — Present" />
+    </label>
+    <label class="checkbox-row">
+        <input type="checkbox" id="current" style="width: auto;" />
+        Currently working here
+    </label>
+    <label>Location
+        <input type="text" id="location" required />
+    </label>
+    <label>Icon (Unicons class)
+        <input type="text" id="icon" required value="uil-briefcase-alt" />
+    </label>
+    <label>Bullet points (one per line)
+        <textarea id="points" required style="min-height: 6rem;"></textarea>
+    </label>
+    <label>Sort order
+        <input type="text" id="sortOrder" required value="1" />
+    </label>
+    <div class="admin-actions">
+        <button type="submit" class="admin-btn">Save</button>
+        <button type="button" class="admin-btn secondary" onclick="resetForm()">Cancel</button>
+        <span id="status" class="admin-status"></span>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    const status = document.getElementById("status");
+
+    function resetForm() {
+        document.getElementById("form").reset();
+        document.getElementById("editId").value = "";
+        document.getElementById("sortOrder").value = "1";
+        document.getElementById("icon").value = "uil-briefcase-alt";
+    }
+
+    function editRow(item) {
+        document.getElementById("editId").value = item.id;
+        document.getElementById("role").value = item.role;
+        document.getElementById("company").value = item.company;
+        document.getElementById("period").value = item.period;
+        document.getElementById("current").checked = item.current;
+        document.getElementById("location").value = item.location;
+        document.getElementById("icon").value = item.icon;
+        document.getElementById("points").value = arrayToLines(item.points);
+        document.getElementById("sortOrder").value = item.sortOrder;
+        window.scrollTo({ top: document.getElementById("form").offsetTop, behavior: "smooth" });
+    }
+
+    async function deleteRow(id) {
+        if (!confirm("Delete this experience entry?")) return;
+        await authFetch(`/api/admin/experience/${id}`, { method: "DELETE" });
+        await load();
+    }
+
+    async function load() {
+        const res = await authFetch("/api/admin/experience");
+        const items = await res.json();
+        const body = document.getElementById("table-body");
+        body.innerHTML = "";
+        for (const item of items) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${item.role}</td>
+                <td>${item.company}</td>
+                <td>${item.period}</td>
+                <td>${item.current ? "Yes" : ""}</td>
+                <td>${item.sortOrder}</td>
+                <td>
+                    <button onclick='editRow(${JSON.stringify(item)})'>Edit</button>
+                    <button onclick="deleteRow(${item.id})">Delete</button>
+                </td>`;
+            body.appendChild(tr);
+        }
+    }
+
+    document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("editId").value;
+        const body = {
+            role: document.getElementById("role").value,
+            company: document.getElementById("company").value,
+            period: document.getElementById("period").value,
+            current: document.getElementById("current").checked,
+            location: document.getElementById("location").value,
+            icon: document.getElementById("icon").value,
+            points: linesToArray(document.getElementById("points").value),
+            sortOrder: parseInt(document.getElementById("sortOrder").value, 10),
+        };
+
+        const url = id ? `/api/admin/experience/${id}` : "/api/admin/experience";
+        const method = id ? "PUT" : "POST";
+        const res = await authFetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+
+        if (res.ok) {
+            showStatus(status, "Saved");
+            resetForm();
+            await load();
+        } else {
+            showStatus(status, "Failed to save", true);
+        }
+    });
+
+    load();
+</script>
+}

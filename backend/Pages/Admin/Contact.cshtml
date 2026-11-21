@@ -1,0 +1,61 @@
+@page "/admin/contact"
+@{
+    ViewData["Title"] = "Contact";
+}
+<h1>Contact details</h1>
+<form id="form" class="admin-form">
+    <label>Email
+        <input type="email" id="email" required />
+    </label>
+    <label>Phone
+        <input type="text" id="phone" />
+    </label>
+    <label>Location
+        <input type="text" id="location" required />
+    </label>
+    <label>LinkedIn URL
+        <input type="text" id="linkedinUrl" required />
+    </label>
+    <label>GitHub URL
+        <input type="text" id="githubUrl" required />
+    </label>
+    <div class="admin-actions">
+        <button type="submit" class="admin-btn">Save</button>
+        <span id="status" class="admin-status"></span>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    const status = document.getElementById("status");
+
+    async function load() {
+        const res = await authFetch("/api/admin/contact");
+        const data = await res.json();
+        document.getElementById("email").value = data.email;
+        document.getElementById("phone").value = data.phone;
+        document.getElementById("location").value = data.location;
+        document.getElementById("linkedinUrl").value = data.linkedinUrl;
+        document.getElementById("githubUrl").value = data.githubUrl;
+    }
+
+    document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const body = {
+            email: document.getElementById("email").value,
+            phone: document.getElementById("phone").value,
+            location: document.getElementById("location").value,
+            linkedinUrl: document.getElementById("linkedinUrl").value,
+            githubUrl: document.getElementById("githubUrl").value,
+        };
+        const res = await authFetch("/api/admin/contact", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+        showStatus(status, res.ok ? "Saved" : "Failed to save", !res.ok);
+    });
+
+    load();
+</script>
+}

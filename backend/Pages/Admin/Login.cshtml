@@ -1,0 +1,58 @@
+@page "/admin/login"
+@{
+    Layout = null;
+}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="/admin/admin.css" />
+</head>
+<body>
+    <div class="login-wrap">
+        <h1>Admin Login</h1>
+        <form id="login-form" class="admin-form">
+            <label>Username
+                <input type="text" id="username" required autocomplete="username" />
+            </label>
+            <label>Password
+                <input type="password" id="password" required autocomplete="current-password" />
+            </label>
+            <div class="admin-actions">
+                <button type="submit" class="admin-btn">Log in</button>
+                <span id="status" class="admin-status"></span>
+            </div>
+        </form>
+    </div>
+
+    <script src="/admin/admin.js"></script>
+    <script>
+        document.getElementById("login-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const status = document.getElementById("status");
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+
+            if (!response.ok) {
+                showStatus(status, "Invalid username or password", true);
+                return;
+            }
+
+            const data = await response.json();
+            setToken(data.token);
+            window.location.href = "/admin";
+        });
+
+        if (getToken()) {
+            window.location.href = "/admin";
+        }
+    </script>
+</body>
+</html>

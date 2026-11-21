@@ -1,0 +1,40 @@
+@page "/admin/work"
+@{
+    ViewData["Title"] = "Work intro";
+}
+<h1>Work section intro</h1>
+<p>Individual projects have their own page in the nav above.</p>
+<form id="form" class="admin-form">
+    <label>Intro paragraph
+        <textarea id="introParagraph" required></textarea>
+    </label>
+    <div class="admin-actions">
+        <button type="submit" class="admin-btn">Save</button>
+        <span id="status" class="admin-status"></span>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    const status = document.getElementById("status");
+
+    async function load() {
+        const res = await authFetch("/api/admin/work-intro");
+        const data = await res.json();
+        document.getElementById("introParagraph").value = data.introParagraph;
+    }
+
+    document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const body = { introParagraph: document.getElementById("introParagraph").value };
+        const res = await authFetch("/api/admin/work-intro", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+        showStatus(status, res.ok ? "Saved" : "Failed to save", !res.ok);
+    });
+
+    load();
+</script>
+}

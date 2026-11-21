@@ -1,0 +1,109 @@
+@page "/admin/skill-groups"
+@{
+    ViewData["Title"] = "Skill Groups";
+}
+<h1>Skill groups</h1>
+
+<table class="admin-table" id="table">
+    <thead>
+        <tr><th>Label</th><th>Icon</th><th>Sort</th><th>Items</th><th></th></tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+</table>
+
+<form id="form" class="admin-form">
+    <input type="hidden" id="editId" />
+    <label>Label
+        <input type="text" id="label" required />
+    </label>
+    <label>Icon (Unicons class, e.g. uil-brackets-curly)
+        <input type="text" id="icon" required />
+    </label>
+    <label>Sort order
+        <input type="text" id="sortOrder" required value="1" />
+    </label>
+    <label>Items (one per line)
+        <textarea id="items" required></textarea>
+    </label>
+    <div class="admin-actions">
+        <button type="submit" class="admin-btn">Save</button>
+        <button type="button" class="admin-btn secondary" onclick="resetForm()">Cancel</button>
+        <span id="status" class="admin-status"></span>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+    const status = document.getElementById("status");
+
+    function resetForm() {
+        document.getElementById("form").reset();
+        document.getElementById("editId").value = "";
+        document.getElementById("sortOrder").value = "1";
+    }
+
+    function editRow(item) {
+        document.getElementById("editId").value = item.id;
+        document.getElementById("label").value = item.label;
+        document.getElementById("icon").value = item.icon;
+        document.getElementById("sortOrder").value = item.sortOrder;
+        document.getElementById("items").value = arrayToLines(item.items);
+        window.scrollTo({ top: document.getElementById("form").offsetTop, behavior: "smooth" });
+    }
+
+    async function deleteRow(id) {
+        if (!confirm("Delete this skill group?")) return;
+        await authFetch(`/api/admin/skill-groups/${id}`, { method: "DELETE" });
+        await load();
+    }
+
+    async function load() {
+        const res = await authFetch("/api/admin/skill-groups");
+        const items = await res.json();
+        const body = document.getElementById("table-body");
+        body.innerHTML = "";
+        for (const item of items) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${item.label}</td>
+                <td>${item.icon}</td>
+                <td>${item.sortOrder}</td>
+                <td>${item.items.join(", ")}</td>
+                <td>
+                    <button onclick='editRow(${JSON.stringify(item)})'>Edit</button>
+                    <button onclick="deleteRow(${item.id})">Delete</button>
+                </td>`;
+            body.appendChild(tr);
+        }
+    }
+
+    document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("editId").value;
+        const body = {
+            label: document.getElementById("label").value,
+            icon: document.getElementById("icon").value,
+            sortOrder: parseInt(document.getElementById("sortOrder").value, 10),
+            items: linesToArray(document.getElementById("items").value),
+        };
+
+        const url = id ? `/api/admin/skill-groups/${id}` : "/api/admin/skill-groups";
+        const method = id ? "PUT" : "POST";
+        const res = await authFetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+
+        if (res.ok) {
+            showStatus(status, "Saved");
+            resetForm();
+            await load();
+        } else {
+            showStatus(status, "Failed to save", true);
+        }
+    });
+
+    load();
+</script>
+}
